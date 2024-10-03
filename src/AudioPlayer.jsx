@@ -29,12 +29,14 @@ const AudioPlayer = () => {
   };
 
   const toggleMute = () => {
-    if (isMuted) {
-      audioRef.current.volume = volume; // Restore the volume
-    } else {
-      audioRef.current.volume = 0; // Mute
+    if (audioRef.current) {
+      if (isMuted) {
+        audioRef.current.muted = false; // Unmute
+      } else {
+        audioRef.current.muted = true; // Mute
+      }
+      setIsMuted(!isMuted);
     }
-    setIsMuted(!isMuted);
   };
 
   const fetchSongMetadata = async () => {
