@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from "react";
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlay, faPause, faVolumeUp } from "@fortawesome/free-solid-svg-icons";
+import { faPlay, faPause, faVolumeUp, faVolumeMute } from "@fortawesome/free-solid-svg-icons";
 
 const AudioPlayer = () => {
   const audioRef = useRef(null);
@@ -9,6 +9,7 @@ const AudioPlayer = () => {
   const [currentArtist, setCurrentArtist] = useState("Loading...");
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5); // Initial volume set to 50%
+  const [isMuted, setIsMuted] = useState(false); // State for mute
 
   const handlePlayPause = () => {
     if (audioRef.current.paused) {
@@ -24,6 +25,16 @@ const AudioPlayer = () => {
     const newVolume = parseFloat(e.target.value);
     setVolume(newVolume);
     audioRef.current.volume = newVolume;
+    setIsMuted(newVolume === 0); // Update mute state based on volume
+  };
+
+  const toggleMute = () => {
+    if (isMuted) {
+      audioRef.current.volume = volume; // Restore the volume
+    } else {
+      audioRef.current.volume = 0; // Mute
+    }
+    setIsMuted(!isMuted);
   };
 
   const fetchSongMetadata = async () => {
@@ -43,14 +54,14 @@ const AudioPlayer = () => {
         );
         if (source) {
           setCurrentSong(source.title || "No title available");
-          setCurrentArtist(source.artist || "No artist available");
+          setCurrentArtist(source.artist || "Telkom Radio");
         }
       } else if (data.icestats && data.icestats.source) {
         setCurrentSong(data.icestats.source.title || "No title available");
-        setCurrentArtist(data.icestats.source.artist || "No artist available");
+        setCurrentArtist(data.icestats.source.artist || "Telkom Radio");
       } else {
         setCurrentSong("No title available");
-        setCurrentArtist("No artist available");
+        setCurrentArtist("Telkom Radio");
       }
     } catch (error) {
       console.error("Error fetching song metadata:", error);
@@ -75,9 +86,15 @@ const AudioPlayer = () => {
     <div className="flex flex-col items-center justify-center h-screen bg-[#860f0f] text-white">
       <h2 className="text-3xl font-bold mb-4">Telkom Radio Player</h2>
       <p className="text-xl font-bold mb-2">Now Playing: </p>
-      <p className="text-lg font-bold mb-4">
-        {currentSong} - {currentArtist}
-      </p>
+      <div className="text-center mb-4">
+        <p className="text-lg font-bold">
+          {currentSong.length > 30 ? (
+            <span className="block truncate">{currentSong}</span>
+          ) : (
+            currentSong
+          )} - {currentArtist}
+        </p>
+      </div>
       <div className="flex space-x-4 items-center mb-10">
         <button
           onClick={handlePlayPause}
@@ -86,7 +103,8 @@ const AudioPlayer = () => {
           <FontAwesomeIcon icon={isPlaying ? faPause : faPlay} size="2x" />
         </button>
       </div>
-      <div className="flex items-center">
+      {/* Volume control visible on larger screens */}
+      <div className="hidden sm:flex items-center">
         <FontAwesomeIcon icon={faVolumeUp} size="2x" className="mr-2" />
         <input
           type="range"
@@ -98,6 +116,12 @@ const AudioPlayer = () => {
           className="w-24"
         />
         <span className="ml-2">{Math.round(volume * 100)}%</span>
+      </div>
+      {/* Mute button visible on smaller screens */}
+      <div className="flex sm:hidden items-center">
+        <button onClick={toggleMute} className="px-4 py-2 bg-[#101010] hover:bg-[#101011] rounded">
+          <FontAwesomeIcon icon={isMuted ? faVolumeMute : faVolumeUp} size="2x" />
+        </button>
       </div>
       <audio
         ref={audioRef}
